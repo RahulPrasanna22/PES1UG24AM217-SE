@@ -27,6 +27,8 @@ HOUSE_EXIT, HOUSE_CENTER = (7, 10), (9, 10)
 PLAYER_START = (11, 10)
 FRIGHT_SECONDS = 3.0
 PLAYER_STEP, GHOST_STEP = 0.14, 0.17
+HUD_FLASH_SECONDS = 1.2
+hud_flash_left = 0.0
 
 
 def ghost_color(name, mode):
@@ -43,7 +45,9 @@ def ghost_color(name, mode):
 
 def on_pellet_eaten(score, pellets_left):
     """Called after every pellet is eaten; add sound, flashes, or bonus fruit here."""
-    pass
+    global hud_flash_left
+    if pellets_left == 0:
+        hud_flash_left = HUD_FLASH_SECONDS
 
 
 def bonus_life_threshold():
@@ -132,6 +136,8 @@ class Game:
         self.reset()
 
     def reset(self):
+        global hud_flash_left
+        hud_flash_left = 0.0
         self.pellets = {(r, c) for r, line in enumerate(MAZE) for c, v in enumerate(line) if v in ".o"}
         self.player, self.direction, self.desired = list(PLAYER_START), (0, 1), (0, 1)
         self.score, self.lives, self.state = 0, 3, "play"
@@ -189,6 +195,8 @@ class Game:
                 return
 
     def update(self, dt):
+        global hud_flash_left
+        hud_flash_left = max(0.0, hud_flash_left - dt)
         if self.state != "play":
             return
         self.clock_time += dt
@@ -247,7 +255,8 @@ class Game:
                 pygame.draw.rect(screen, color, (gx - TILE // 2 + 3, gy - 2, TILE - 6, TILE // 2 - 2))
                 pygame.draw.circle(screen, (255, 255, 255), (gx - 4, gy - 4), 3)
                 pygame.draw.circle(screen, (255, 255, 255), (gx + 4, gy - 4), 3)
-        hud = font.render(f"Score {self.score}   Lives {self.lives}   R = reset", True, (240, 240, 240))
+        hud_color = (255, 235, 80) if hud_flash_left > 0 and int(hud_flash_left * 12) % 2 else (240, 240, 240)
+        hud = font.render(f"Score {self.score}   Lives {self.lives}   R = reset", True, hud_color)
         screen.blit(hud, (8, ROWS * TILE + 6))
         if self.state != "play":
             text = "YOU WIN! Press R" if self.state == "win" else "GAME OVER - Press R"
