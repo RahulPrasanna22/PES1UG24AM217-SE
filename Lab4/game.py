@@ -31,7 +31,14 @@ PLAYER_STEP, GHOST_STEP = 0.14, 0.17
 
 def ghost_color(name, mode):
     """Return an (r, g, b) colour override for a ghost, or None to keep the default."""
-    pass
+    if mode != "frightened":
+        return None
+    return {
+        "blinky": (70, 120, 255),
+        "pinky": (190, 100, 255),
+        "inky": (50, 210, 210),
+        "clyde": (80, 190, 100),
+    }.get(name)
 
 
 def on_pellet_eaten(score, pellets_left):
