@@ -5,7 +5,13 @@ import tempfile
 from datetime import date
 from typing import TypedDict
 
-STATUS_FLOW = ["Booked", "Picked Up", "In Transit", "Out for Delivery", "Delivered"]
+STATUS_FLOW = [
+    "Booked",
+    "Picked Up",
+    "In Transit",
+    "Out for Delivery",
+    "Delivered",
+]
 
 
 class Parcel(TypedDict):
@@ -21,8 +27,13 @@ class Parcel(TypedDict):
 parcels: dict[str, Parcel] = {}
 
 
-def book_parcel(sender: str, receiver: str, weight_kg: float, history: list[str] | None = None) -> str:
-    """Book a parcel and optionally append its ID to a caller-provided history."""
+def book_parcel(
+    sender: str,
+    receiver: str,
+    weight_kg: float,
+    history: list[str] | None = None,
+) -> str:
+    """Book a parcel and optionally append its ID to a history list."""
     tracking_id = f"TRK{10001 + len(parcels)}"
     parcels[tracking_id] = {
         "sender": sender,
@@ -46,7 +57,7 @@ def advance_status(tracking_id: str) -> str:
 
 def shipping_cost(weight_kg: float) -> float:
     """Return the shipping cost for a parcel's weight in kilograms."""
-    cost=50
+    cost = 50
     if weight_kg > 1:
         cost += (weight_kg - 1) * 30
     return round(cost, 2)
@@ -64,12 +75,14 @@ def track_parcel(tracking_id: str) -> str:
 def is_with_courier(tracking_id: str) -> bool:
     """Return whether a parcel is in a courier-controlled delivery stage."""
     status = STATUS_FLOW[parcels[tracking_id]["status"]]
-    return status == "Picked Up" or status == "In Transit"
+    return status in ("Picked Up", "In Transit")
 
 
 def label_path() -> str:
     """Create a unique, empty temporary label file and return its path."""
-    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as label_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".txt", delete=False
+    ) as label_file:
         return label_file.name
 
 
@@ -87,10 +100,10 @@ def main() -> None:
         print(track_parcel(tracking_id))
         print("  with courier:", is_with_courier(tracking_id))
         print("  cost:", shipping_cost(parcels[tracking_id]["weight"]))
-    print(track_parcel("TRK00000")) # unknown id
+    print(track_parcel("TRK00000"))  # unknown id
     delivery_otp = secrets.randbelow(9000) + 1000
     print("Delivery OTP for", third, "is", delivery_otp)
-    print("Parcels booked today:",len(parcels))
+    print("Parcels booked today:", len(parcels))
 
 
 if __name__ == "__main__":
